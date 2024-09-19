@@ -1,0 +1,48 @@
+﻿
+using EntityChallenger.Model;
+using Microsoft.IdentityModel.Tokens;
+using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+
+namespace EntityChallenger.Services;
+
+public class TokenService
+{
+    private IConfiguration _configuration;
+
+    public TokenService(IConfiguration configuration)
+    {
+        _configuration = configuration;
+    }
+
+    public string GenerateToken(Admin usuario)
+    {
+        Claim[] claims =
+  [
+            new Claim("id", usuario.Id),
+             new Claim("username", usuario.UserName),
+            new Claim("CPF", usuario.Cpf),
+            new Claim(ClaimTypes.DateOfBirth, usuario.DataNascimento.ToString()),
+            new Claim("loginTimestamp", DateTime.UtcNow.ToString()),
+        ];
+
+        var chave =
+            new SymmetricSecurityKey
+            (Encoding.UTF8.GetBytes
+            ("SDAFG+HJKL213456IULKJGHFBFDVDFGNN"));
+
+        var signingCredentials =
+            new SigningCredentials(chave, SecurityAlgorithms.HmacSha256);
+
+        var token = new JwtSecurityToken
+            (
+        expires: DateTime.Now.AddMinutes(10),
+            claims: claims,
+            signingCredentials: signingCredentials
+            );
+                
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+}
